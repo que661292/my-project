@@ -1,0 +1,20 @@
+name: CI Check
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check Python syntax
+        run: |
+          find . -name "*.py" -exec python3 -m py_compile {} \;
+          echo "All Python files OK"
+      - name: Check for large files
+        run: |
+          find . -size +1M -exec echo "WARNING: Large file {}" \;
+          echo "Size check complete"

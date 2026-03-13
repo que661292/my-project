@@ -1,0 +1,31 @@
+name: AI Code Review
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Get diff
+        run: git diff origin/main...HEAD > /tmp/diff.txt
+      - name: Install dependencies
+        run: pip install anthropic
+      - name: AI Review
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          python3 << 'SCRIPT'
+import anthropic, os
+client = anthropic.Anthropic()
+diff = open("/tmp/diff.txt").read()[:10000]
+msg = client.messages.create(
+    model="claude-haiku-4-5",
+    max_tokens=1000,
+    messages=[{"role":"user","content":f"Review this code diff. Flag any bugs, security issues, or improvements. Be concise.\n\n{diff}"}]
+)
+print(msg.content[0].text)
+SCRIPT
